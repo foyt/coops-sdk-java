@@ -51,12 +51,6 @@
       </plugin>
     </plugins>
   </build>
-  <distributionManagement>
-    <repository>
-      <id>fni-googlecode</id>
-      <url>svn:https://fni.googlecode.com/svn/repository</url>
-    </repository>
-  </distributionManagement>
   <organization>
   	<name>Foyt</name>
   	<url>www.foyt.fi</url>
