@@ -90,28 +90,11 @@
   		<version>2.2</version>
   	</dependency>
   	<dependency>
-      <groupId>diff_match_patch</groupId>
-      <artifactId>diff_match_patch</artifactId>
-      <version>current</version>
-    </dependency>
-  	<dependency>
   		<groupId>org.apache.httpcomponents</groupId>
   		<artifactId>httpclient</artifactId>
   		<version>4.2.5</version>
   	</dependency>
   </dependencies>
-  
-  <repositories>
-  
-    <!-- Diff-patch-match -->
-  
-    <repository>
-      <id>google-diff-patch-match</id>
-      <name>google-diff-patch-match</name>
-      <url>http://google-diff-match-patch.googlecode.com/svn/trunk/maven/</url>
-    </repository>
-  
-  </repositories>
   
   <licenses>
     <license>
