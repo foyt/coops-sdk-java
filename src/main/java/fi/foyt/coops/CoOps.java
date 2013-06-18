@@ -74,7 +74,7 @@ public class CoOps {
    * Returns a file
    * 
    * @param auth authentication used for this request
-   * @return
+   * @return a file
    * @throws ServerException ServerException is thrown when server returns does not return a successful result
    * @throws IOException IOException is thrown when error occurs in server communication
    * @throws UsageException UsageException is thrown when method is called incorrectly
