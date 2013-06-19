@@ -223,7 +223,7 @@ public class CoOpsTest {
   public void testSaveFile() throws UsageException, ServerException, IOException {
     TestIO testIO = new TestIO();
     CoOps coOps = new CoOps(testIO, "http", "localhost", 80, "");
-    testIO.addMockedResult("", null);
+    testIO.addMockedResult("", "");
     
     File file = new File();
     file.setContent("abcd");
@@ -240,7 +240,7 @@ public class CoOpsTest {
   public void testPatchFile() throws UsageException, ServerException, IOException {
     TestIO testIO = new TestIO();
     CoOps coOps = new CoOps(testIO, "http", "localhost", 80, "");
-    testIO.addMockedResult("", null);
+    testIO.addMockedResult("", "");
     
     Map<String, String> properties = new HashMap<>();
     properties.put("meta", "value");
@@ -254,7 +254,7 @@ public class CoOpsTest {
     coOps.patchFile(patch, null);
   }
   
-  @Test
+  @Test (expected = UsageException.class)
   public void testPatchFileNullAlgorithm() throws UsageException, ServerException, IOException {
     CoOps coOps = new CoOps("http", "localhost", 80, "");
     
@@ -265,7 +265,7 @@ public class CoOpsTest {
     coOps.patchFile(patch, null);
   }
   
-  @Test
+  @Test (expected = UsageException.class)
   public void testPatchFileNullRevisionNumber() throws UsageException, ServerException, IOException {
     CoOps coOps = new CoOps("http", "localhost", 80, "");
     
