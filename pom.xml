@@ -14,8 +14,9 @@
   </organization>
   
   <scm>
-    <connection>scm:git:git://github.com/foyt/coops-sdk-java.git</connection>
-    <url>scm:git:git://github.com/foyt/coops-sdk-java.git</url>
+    <connection>scm:git:git@github.com:foyt/coops-sdk-java.git</connection>
+    <developerConnection>scm:git:git@github.com:foyt/coops-sdk-java.git</developerConnection>
+    <url>git@github.com:foyt/coops-sdk-java.git</url>
   </scm>
   
   <issueManagement>
@@ -49,6 +50,12 @@
     <maven.compiler.source>1.7</maven.compiler.source>
     <maven.compiler.target>1.7</maven.compiler.target>
   </properties>
+  
+  <parent>
+    <groupId>org.sonatype.oss</groupId>
+    <artifactId>oss-parent</artifactId>
+    <version>7</version>
+  </parent>
 
   <build>
     <plugins>
