@@ -1,4 +1,6 @@
 coops-sdk-java
 ==============
 
-Java SDK for Co-Ops server
+Java Software Development Kit for Co-Ops servers.
+
+See Co-Ops specification from https://github.com/foyt/coops-spec/ for more information.
