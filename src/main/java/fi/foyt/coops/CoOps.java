@@ -6,23 +6,14 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPatch;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.util.EntityUtils;
 import org.joda.time.DateTime;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import fi.foyt.coops.io.DefaultIOHandler;
+import fi.foyt.coops.io.IOHandler;
 import fi.foyt.coops.model.File;
 import fi.foyt.coops.model.FileJoin;
 import fi.foyt.coops.model.Patch;
@@ -34,7 +25,16 @@ public class CoOps {
   protected static final String CONTENT_TYPE_JSON = "application/json";
   
   public CoOps(String protocol, String host, int port, String basePath) {
-    this.gson = createGson();
+    this(new DefaultIOHandler(), protocol, host, port, basePath);
+  }
+  
+  public CoOps(IOHandler ioHandler, String protocol, String host, int port, String basePath) {
+    this(ioHandler, createGson(), protocol, host, port, basePath);
+  }
+  
+  public CoOps(IOHandler ioHandler, Gson gson, String protocol, String host, int port, String basePath) {
+    this.gson = gson;
+    this.ioHandler = ioHandler;
     this.protocol = protocol;
     this.host = host;
     this.port = port;
@@ -134,14 +134,32 @@ public class CoOps {
     
     doPatch(patch, null, basePath, CONTENT_TYPE_JSON, auth);
   }
+
+  /**
+   * Returns used IO handler
+   * 
+   * @return IO handler
+   */
+  public IOHandler getIoHandler() {
+    return ioHandler;
+  }
+  
+  /**
+   * Returns used Gson instance
+   * 
+   * @return Gson instance
+   */
+  public Gson getGson() {
+    return gson;
+  }
   
   protected <T> T doGet(Class<T> resultClass, String path, Auth auth) throws ServerException, IOException {
-    String response = doGetRequest(path, auth);
+    String response = ioHandler.doGetRequest(getURI(path), auth);
     return objectFromJson(resultClass, response);
   }
   
   protected <T> T doPost(Object entity, Class<T> resultClass, String path, String contentType, Auth auth) throws ServerException, IOException {
-    String response = doPostRequest("POST", path, objectToJson(entity), contentType, auth);
+    String response = ioHandler.doPostRequest(getURI(path), objectToJson(entity), contentType, auth);
     if (resultClass != null) {
       return objectFromJson(resultClass, response);
     } else {
@@ -150,7 +168,7 @@ public class CoOps {
   }
 
   protected <T> T doPut(Object entity, Class<T> resultClass, String path, String contentType, Auth auth) throws ServerException, IOException {
-    String response = doPostRequest("PUT", path, objectToJson(entity), contentType, auth);
+    String response = ioHandler.doPutRequest(getURI(path), objectToJson(entity), contentType, auth);
     if (resultClass != null) {
       return objectFromJson(resultClass, response);
     } else {
@@ -159,7 +177,7 @@ public class CoOps {
   }
 
   protected <T> T doPatch(Object entity, Class<T> resultClass, String path, String contentType, Auth auth) throws ServerException, IOException {
-    String response = doPostRequest("PATCH", path, objectToJson(entity), contentType, auth);
+    String response = ioHandler.doPatchRequest(getURI(path), objectToJson(entity), contentType, auth);
     if (resultClass != null) {
       return objectFromJson(resultClass, response);
     } else {
@@ -174,7 +192,7 @@ public class CoOps {
   protected String objectToJson(Object object) {
     return gson.toJson(object);
   }
-  
+
   protected URI getURI(String path) throws IOException {
     try {
       return new URL(protocol, host, port, path).toURI();
@@ -183,85 +201,10 @@ public class CoOps {
     }
   }
   
-  protected String doGetRequest(String path, Auth auth) throws IOException, ServerException {
-    HttpGet httpGet = new HttpGet(getURI(path)); 
-    
-    DefaultHttpClient httpclient = new DefaultHttpClient();
-    auth.authenticateRequest(httpGet);
-    
-    HttpResponse response = httpclient.execute(httpGet);
-    HttpEntity entity = response.getEntity();
-    try {
-      int status = response.getStatusLine().getStatusCode();
-      if (status == 204) {
-       // No Content
-        return null;
-      }
-      
-      String content = IOUtils.toString(entity.getContent());
-      if (status == 200) {
-        return content;
-      }
-      
-      throw new ServerException(content);
-    } finally {
-      EntityUtils.consume(entity);
-    }
-  }
-  
-  protected String doPostRequest(String verb, String path, String body, String contentType, Auth auth) throws IOException, ServerException {
-    HttpEntityEnclosingRequestBase request = null;
-    
-    switch (verb) {
-      case "POST":
-        request = new HttpPost(getURI(path));
-      break;
-      case "PUT":
-        request = new HttpPut(getURI(path));
-      break;
-      case "PATCH":
-        request = new HttpPatch(getURI(path));
-      break;
-    }
-    
-    DefaultHttpClient httpclient = new DefaultHttpClient();
-    auth.authenticateRequest(request);
-    
-    if (contentType != null) {
-      request.setHeader("Content-type", contentType);
-    }
-    
-    if (body != null) {
-      request.setEntity(new StringEntity(body));
-    }
-    
-    HttpResponse response = httpclient.execute(request);
-    HttpEntity entity = response.getEntity();
-    try {
-      int status = response.getStatusLine().getStatusCode();
-      if (status == 204) {
-       // No Content
-        return null;
-      }
-      
-      String content = IOUtils.toString(entity.getContent());
-      if (status == 200) {
-        return content;
-      }
-      
-      switch (status) {
-        case 200:
-          return content;
-        case 401:
-          throw new UnauthorizedException(content);
-        case 403:
-          throw new ForbiddenException(content);
-      }
-
-      throw new ServerException(content);
-    } finally {
-      EntityUtils.consume(entity);
-    }
+  private static Gson createGson() {
+    return new GsonBuilder()
+      .registerTypeAdapter(DateTime.class, new JodaDateTimeTypeConverter())
+      .create();
   }
   
   private String protocol;
@@ -269,10 +212,5 @@ public class CoOps {
   private int port;
   private String basePath;
   private Gson gson;
-  
-  private Gson createGson() {
-    return new GsonBuilder()
-      .registerTypeAdapter(DateTime.class, new JodaDateTimeTypeConverter())
-      .create();
-  }
+  private IOHandler ioHandler;
 }

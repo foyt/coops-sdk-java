@@ -1,9 +1,9 @@
 package fi.foyt.coops;
 
-import org.apache.http.client.methods.HttpRequestBase;
+import java.util.Map;
 
 public interface Auth {
   
-  public void authenticateRequest(HttpRequestBase request);
+  public Map<String, String> getHeaders();
 
 }
